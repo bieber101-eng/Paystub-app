@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#17365d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Paycheck">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Paycheck Estimator</title>
+  <style>
+    :root {
+      --navy:#17365d;
+      --blue:#eaf3ff;
+      --green:#b6d7a8;
+      --green-dark:#274e13;
+      --red:#f4cccc;
+      --text:#16202a;
+      --muted:#667085;
+      --card:#ffffff;
+      --bg:#f3f6f9;
+      --border:#d0d5dd;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      padding:max(18px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+    }
+    .app { max-width:520px; margin:0 auto; }
+    header {
+      background:var(--navy);
+      color:white;
+      padding:22px 20px;
+      border-radius:22px;
+      box-shadow:0 8px 24px rgba(23,54,93,.18);
+      margin-bottom:16px;
+    }
+    h1 { margin:0; font-size:28px; letter-spacing:.2px; }
+    .subtitle { margin-top:5px; opacity:.82; font-size:14px; }
+    .card {
+      background:var(--card);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:0 4px 18px rgba(16,24,40,.07);
+      margin-bottom:14px;
+    }
+    .grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    label {
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:600;
+    }
+    input {
+      width:100%;
+      border:1px solid #b9c7da;
+      border-radius:14px;
+      background:var(--blue);
+      padding:14px 13px;
+      font-size:20px;
+      font-weight:700;
+      color:#0b4da2;
+      outline:none;
+    }
+    input:focus {
+      border-color:#4d83c5;
+      box-shadow:0 0 0 3px rgba(77,131,197,.15);
+    }
+    .deposit {
+      background:linear-gradient(145deg,#d9ead3,var(--green));
+      border:2px solid #5c8d48;
+      text-align:center;
+    }
+    .deposit .label {
+      color:var(--green-dark);
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:.6px;
+    }
+    .deposit .amount {
+      color:var(--green-dark);
+      font-size:44px;
+      line-height:1.1;
+      margin-top:6px;
+      font-weight:800;
+    }
+    .row {
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      padding:10px 0;
+      border-bottom:1px solid #edf0f2;
+      font-size:15px;
+    }
+    .row:last-child { border-bottom:none; }
+    .row strong { text-align:right; }
+    .gross { background:#f0f8ed; margin:6px -8px; padding:12px 8px; border-radius:10px; font-weight:800; }
+    .tax { color:#9b1c1c; }
+    .note {
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      padding:0 4px;
+    }
+    .toolbar {
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+    }
+    button {
+      flex:1;
+      border:none;
+      border-radius:14px;
+      padding:13px;
+      background:var(--navy);
+      color:#fff;
+      font-size:15px;
+      font-weight:700;
+    }
+    button.secondary {
+      background:#e7ebef;
+      color:#344054;
+    }
+    @media (max-width:380px) {
+      .grid { grid-template-columns:1fr; }
+      .deposit .amount { font-size:38px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Paycheck Estimator</h1>
+    <div class="subtitle">Built from your actual payroll history</div>
+  </header>
+
+  <section class="card">
+    <div class="grid">
+      <div>
+        <label for="regular">Regular hours</label>
+        <input id="regular" type="number" step="0.25" inputmode="decimal" value="80">
+      </div>
+      <div>
+        <label for="overtime">Overtime hours</label>
+        <input id="overtime" type="number" step="0.25" inputmode="decimal" value="128">
+      </div>
+      <div>
+        <label for="rate">Hourly rate</label>
+        <input id="rate" type="number" step="0.01" inputmode="decimal" value="31.20">
+      </div>
+      <div>
+        <label for="tower">Tower climb feet</label>
+        <input id="tower" type="number" step="1" inputmode="numeric" value="250">
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="save">Save defaults</button>
+      <button id="reset" class="secondary">Reset</button>
+    </div>
+  </section>
+
+  <section class="card deposit">
+    <div class="label">ESTIMATED DIRECT DEPOSIT</div>
+    <div class="amount" id="net">$0.00</div>
+  </section>
+
+  <section class="card">
+    <div class="row"><span>Regular pay</span><strong id="regularPay">$0.00</strong></div>
+    <div class="row"><span>Overtime pay</span><strong id="overtimePay">$0.00</strong></div>
+    <div class="row"><span>Tower climb pay</span><strong id="towerPay">$0.00</strong></div>
+    <div class="row"><span>Other earnings</span><strong id="otherEarnings">$0.00</strong></div>
+    <div class="row gross"><span>Gross pay</span><strong id="gross">$0.00</strong></div>
+    <div class="row"><span>401(k) — 9%</span><strong id="retirement">$0.00</strong></div>
+    <div class="row"><span>Pre-tax benefits</span><strong id="pretax">$0.00</strong></div>
+    <div class="row tax"><span>Estimated taxes</span><strong id="taxes">$0.00</strong></div>
+    <div class="row"><span>Post-tax deductions</span><strong id="posttax">$0.00</strong></div>
+  </section>
+
+  <p class="note">
+    Estimate calibrated from your December 2025 and April 2026 pay stubs.
+    It assumes the same filing status, benefits and payroll setup. Actual payroll
+    can vary because of tax-table rounding, benefit changes or unusual earnings.
+  </p>
+</div>
+
+<script>
+const C = {
+  overtimeMultiplier: 1.5,
+  towerRate: 1.0,
+  retirementRate: 0.09,
+  fixedCashEarnings: 155.00,
+  otherTaxableEarnings: 66.54,
+  preTaxBenefits: 163.95,
+  postTaxDeductions: 28.08,
+  fedSlope: 0.199135508250,
+  fedIntercept: -511.918589818640,
+  laSlope: 0.030776017290,
+  laIntercept: -14.482699428204
+};
+
+const ids = ["regular","overtime","rate","tower"];
+const $ = id => document.getElementById(id);
+const money = n => n.toLocaleString("en-US", {style:"currency", currency:"USD"});
+const num = id => Math.max(0, Number($(id).value || 0));
+
+function calculate() {
+  const regular = num("regular");
+  const overtime = num("overtime");
+  const rate = num("rate");
+  const tower = num("tower");
+
+  const regularPay = regular * rate;
+  const overtimePay = overtime * rate * C.overtimeMultiplier;
+  const towerPay = tower * C.towerRate;
+  const otherEarnings = C.fixedCashEarnings + C.otherTaxableEarnings;
+  const gross = regularPay + overtimePay + towerPay + otherEarnings;
+
+  const retirementEligible = regularPay + overtimePay + towerPay + C.fixedCashEarnings;
+  const retirement = retirementEligible * C.retirementRate;
+  const federalTaxable = gross - retirement - C.preTaxBenefits;
+  const ssMedTaxable = gross - C.preTaxBenefits;
+
+  const federal = Math.max(0, C.fedIntercept + C.fedSlope * federalTaxable);
+  const louisiana = Math.max(0, C.laIntercept + C.laSlope * federalTaxable);
+  const socialSecurity = ssMedTaxable * 0.062;
+  const medicare = ssMedTaxable * 0.0145;
+  const taxes = federal + louisiana + socialSecurity + medicare;
+  const net = gross - retirement - C.preTaxBenefits - taxes - C.postTaxDeductions;
+
+  $("regularPay").textContent = money(regularPay);
+  $("overtimePay").textContent = money(overtimePay);
+  $("towerPay").textContent = money(towerPay);
+  $("otherEarnings").textContent = money(otherEarnings);
+  $("gross").textContent = money(gross);
+  $("retirement").textContent = money(retirement);
+  $("pretax").textContent = money(C.preTaxBenefits);
+  $("taxes").textContent = money(taxes);
+  $("posttax").textContent = money(C.postTaxDeductions);
+  $("net").textContent = money(net);
+}
+
+function saveDefaults() {
+  const data = Object.fromEntries(ids.map(id => [id, $(id).value]));
+  localStorage.setItem("paycheck-defaults", JSON.stringify(data));
+  $("save").textContent = "Saved";
+  setTimeout(() => $("save").textContent = "Save defaults", 900);
+}
+
+function loadDefaults() {
+  const saved = JSON.parse(localStorage.getItem("paycheck-defaults") || "null");
+  if (saved) ids.forEach(id => { if (saved[id] !== undefined) $(id).value = saved[id]; });
+}
+
+function resetDefaults() {
+  localStorage.removeItem("paycheck-defaults");
+  $("regular").value = 80;
+  $("overtime").value = 128;
+  $("rate").value = 31.20;
+  $("tower").value = 250;
+  calculate();
+}
+
+ids.forEach(id => $(id).addEventListener("input", calculate));
+$("save").addEventListener("click", saveDefaults);
+$("reset").addEventListener("click", resetDefaults);
+loadDefaults();
+calculate();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+}
+</script>
+</body>
+</html>
